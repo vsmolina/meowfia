@@ -39,3 +39,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# allow the documented env template
+!.env.example
+
+# local database, generated client, uploaded/seeded files
+/dev.db
+/dev.db-journal
+/*.db
+/src/generated/
+/storage/
+/public/placeholder.png

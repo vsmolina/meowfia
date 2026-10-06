@@ -1,26 +1,221 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-barlow);
+  --font-mono: var(--font-plex-mono);
+  --font-heading: var(--font-stencil);
+  --color-olive: var(--olive);
+  --color-olive-dark: var(--olive-dark);
+  --color-olive-light: var(--olive-light);
+  --color-khaki: var(--khaki);
+  --color-sand: var(--sand);
+  --color-paper: var(--paper);
+  --color-kraft: var(--kraft);
+  --color-kraft-dark: var(--kraft-dark);
+  --color-stamp: var(--stamp);
+  --color-ink: var(--ink);
+  --color-chart-6: var(--chart-6);
+  --color-chart-7: var(--chart-7);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  /* Field-manual palette. Brand hexes also live in src/config/site.ts (colors). */
+  --olive: #4b5320;
+  --olive-dark: #2f3514;
+  --olive-light: #6b7536;
+  --khaki: #c3b091;
+  --sand: #efe6d2;
+  --paper: #f8f2e4;
+  --kraft: #b88a57;
+  --kraft-dark: #8a6239;
+  --stamp: #b3261e;
+  --ink: #1f2113;
+
+  --background: var(--sand);
+  --foreground: var(--ink);
+  --card: var(--paper);
+  --card-foreground: var(--ink);
+  --popover: var(--paper);
+  --popover-foreground: var(--ink);
+  --primary: var(--olive);
+  --primary-foreground: #f8f2e4;
+  --secondary: #ddd0b2;
+  --secondary-foreground: var(--ink);
+  --muted: #e6dbc2;
+  --muted-foreground: #55512f;
+  --accent: #e2cfae;
+  --accent-foreground: var(--ink);
+  --destructive: var(--stamp);
+  --border: #cbbb98;
+  --input: #bfae88;
+  --ring: var(--olive);
+  --chart-1: #4b5320;
+  --chart-2: #b88a57;
+  --chart-3: #b3261e;
+  --chart-4: #7d8a3c;
+  --chart-5: #5c4a32;
+  --chart-6: #c3b091;
+  --chart-7: #2f5d62;
+  --radius: 0.375rem;
+  --sidebar: var(--paper);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--olive);
+  --sidebar-primary-foreground: #f8f2e4;
+  --sidebar-accent: var(--muted);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--olive);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  button:not(:disabled), [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  html {
+    @apply font-sans;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ───────────── Field manual utilities ───────────── */
+
+@layer base {
+  body {
+    background-color: var(--sand);
+    background-image: var(--paper-grain);
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+  :focus-visible {
+    outline: 3px solid var(--olive);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--olive);
+    color: var(--paper);
+  }
+}
+
+:root {
+  /* Tiny inline SVG noise for a kraft/paper grain (around 300 bytes, no network request) */
+  --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .27 0 0 0 0 .15 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --kraft-fibers: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.02 .6' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .3 0 0 0 0 .2 0 0 0 0 .1 0 0 0 .18 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+}
+
+@utility font-stencil {
+  font-family: var(--font-stencil), "Arial Black", system-ui, sans-serif;
+  letter-spacing: 0.02em;
+  font-weight: 400;
+}
+
+/* Corrugated cardboard surface */
+@utility bg-kraft {
+  background-color: var(--kraft);
+  background-image: var(--kraft-fibers);
+}
+
+@utility bg-olive-camo {
+  background-color: var(--olive);
+  background-image:
+    radial-gradient(ellipse 40% 30% at 20% 30%, rgb(47 53 20 / 0.55), transparent 70%),
+    radial-gradient(ellipse 30% 40% at 75% 60%, rgb(107 117 54 / 0.5), transparent 70%),
+    radial-gradient(ellipse 25% 20% at 50% 90%, rgb(47 53 20 / 0.45), transparent 70%),
+    var(--paper-grain);
+}
+
+/* Dossier paper: subtle ruled lines */
+@utility bg-dossier {
+  background-color: var(--paper);
+  background-image:
+    repeating-linear-gradient(to bottom, transparent 0 27px, rgb(75 83 32 / 0.08) 27px 28px),
+    var(--paper-grain);
+}
+
+/* Hazard stripe divider */
+@utility hazard-stripe {
+  background-image: repeating-linear-gradient(-45deg, var(--ink) 0 10px, var(--khaki) 10px 20px);
+}
+
+/* Masking-tape corner */
+@utility tape {
+  position: relative;
+  &::before {
+    content: "";
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    width: 84px;
+    height: 22px;
+    translate: -50% 0;
+    rotate: -3deg;
+    background: rgb(232 220 180 / 0.85);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
+    z-index: 2;
+  }
+}
+
+/* Stamped shadow used on cards/buttons */
+@utility shadow-stamp {
+  box-shadow: 3px 3px 0 0 var(--ink);
+}
+@utility shadow-stamp-sm {
+  box-shadow: 2px 2px 0 0 var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -1,0 +1,862 @@
+// Meowfia data model.
+// Runs on SQLite locally. To move to Postgres (Neon/Supabase), change `provider`
+// below to "postgresql", swap the driver adapter in src/lib/db.ts, and run
+// `prisma migrate dev`. Nothing here is SQLite-specific.
+// Money is always stored as integer cents.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ───────────────────────────── Auth.js ─────────────────────────────
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id               String    @id @default(cuid())
+  name             String?
+  email            String    @unique
+  emailVerified    DateTime?
+  image            String?
+  role             Role      @default(USER)
+  handle           String?   @unique
+  bio              String?
+  referralCode     String    @unique @default(cuid())
+  referredById     String?
+  referredBy       User?     @relation("Referrals", fields: [referredById], references: [id], onDelete: SetNull)
+  referred         User[]    @relation("Referrals")
+  storeCreditCents Int       @default(0)
+  stripeCustomerId String?   @unique
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  accounts            Account[]
+  sessions            Session[]
+  orders              Order[]
+  entitlements        Entitlement[]
+  membership          Membership?
+  galleryPosts        GalleryPost[]
+  likes               Like[]
+  favorites           Favorite[]
+  reviews             Review[]
+  pollVotes           PollVote[]
+  commissions         Commission[]
+  referralConversions ReferralConversion[] @relation("Referrer")
+  referralClicks      ReferralClick[]
+  carts               Cart[]
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+// ───────────────────────────── Crew ─────────────────────────────
+
+model Cat {
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  name            String
+  rank            String
+  callsign        String?
+  personality     String
+  favoriteVehicle String
+  bio             String
+  imageKey        String
+  sortOrder       Int      @default(0)
+  videos          Video[]
+  createdAt       DateTime @default(now())
+}
+
+// ───────────────────────────── Templates ─────────────────────────────
+
+enum VehicleType {
+  TANK
+  PLANE
+  BOAT
+  OTHER
+}
+
+enum Difficulty {
+  RECRUIT
+  SOLDIER
+  VETERAN
+  ELITE
+}
+
+enum CatSize {
+  KITTEN
+  STANDARD
+  CHONK
+}
+
+enum PricingMode {
+  FREE
+  FIXED
+  PWYW
+}
+
+enum PublishStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum License {
+  PERSONAL
+  COMMERCIAL
+  CLASSROOM
+}
+
+model Template {
+  id                     String        @id @default(cuid())
+  slug                   String        @unique
+  name                   String
+  codename               String?
+  tagline                String
+  description            String
+  vehicleType            VehicleType
+  difficulty             Difficulty
+  catSize                CatSize
+  buildTimeMinutes       Int
+  materials              Json // string[]
+  pricingMode            PricingMode
+  priceCents             Int           @default(0) // FIXED price, or PWYW minimum
+  suggestedPriceCents    Int? // PWYW suggestion
+  commercialUpgradeCents Int           @default(1500)
+  classroomUpgradeCents  Int           @default(2500)
+  coverImageKey          String
+  imageKeys              Json // string[]
+  pdfLetterKey           String?
+  pdfA4Key               String?
+  tiktokUrl              String?
+  featured               Boolean       @default(false)
+  isLeadMagnet           Boolean       @default(false)
+  membersOnly            Boolean       @default(false)
+  earlyAccessHours       Int           @default(0) // members see it this many hours before releaseAt
+  releaseAt              DateTime? // future = scheduled drop
+  status                 PublishStatus @default(PUBLISHED)
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+
+  bundleItems  BundleItem[]
+  entitlements Entitlement[]
+  reviews      Review[]
+  galleryPosts GalleryPost[]
+  videos       Video[]
+  guides       Guide[]
+  products     Product[]
+  favorites    Favorite[]
+  dropNotifies DropNotify[]
+  cartItems    CartItem[]
+  orderItems   OrderItem[]
+
+  @@index([status, releaseAt])
+}
+
+model Bundle {
+  id              String       @id @default(cuid())
+  slug            String       @unique
+  name            String
+  description     String
+  discountPercent Int
+  coverImageKey   String
+  active          Boolean      @default(true)
+  items           BundleItem[]
+  cartItems       CartItem[]
+  orderItems      OrderItem[]
+  createdAt       DateTime     @default(now())
+}
+
+model BundleItem {
+  bundleId   String
+  templateId String
+  bundle     Bundle   @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  template   Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@id([bundleId, templateId])
+}
+
+enum EntitlementSource {
+  PURCHASE
+  FREE
+  MEMBERSHIP
+  ADMIN
+}
+
+/// Grants a person access to a template's PDFs. Keyed by email so guest purchases
+/// show up in the account once that email signs in.
+model Entitlement {
+  id         String            @id @default(cuid())
+  email      String
+  userId     String?
+  user       User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  templateId String
+  template   Template          @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  license    License           @default(PERSONAL)
+  source     EntitlementSource
+  orderId    String?
+  createdAt  DateTime          @default(now())
+  downloads  DownloadLog[]
+
+  @@unique([email, templateId])
+  @@index([userId])
+}
+
+model DownloadLog {
+  id            String      @id @default(cuid())
+  entitlementId String
+  entitlement   Entitlement @relation(fields: [entitlementId], references: [id], onDelete: Cascade)
+  format        String
+  createdAt     DateTime    @default(now())
+}
+
+model Favorite {
+  userId     String
+  templateId String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  template   Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@id([userId, templateId])
+}
+
+model DropNotify {
+  id         String    @id @default(cuid())
+  email      String
+  templateId String
+  template   Template  @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  notifiedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@unique([email, templateId])
+}
+
+// ───────────────────────────── Shop ─────────────────────────────
+
+enum ProductType {
+  KIT
+  MERCH
+}
+
+model Product {
+  id                String           @id @default(cuid())
+  slug              String           @unique
+  name              String
+  description       String
+  type              ProductType
+  category          String // e.g. "Shirts", "Stickers", "Kits"
+  imageKeys         Json // string[]
+  priceCents        Int // base price; variants may override
+  compareAtCents    Int?
+  templateId        String?
+  template          Template?        @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  printfulProductId String?
+  upsellProductId   String? // "add the matching sticker"
+  featured          Boolean          @default(false)
+  active            Boolean          @default(true)
+  variants          ProductVariant[]
+  reviews           Review[]
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+}
+
+model ProductVariant {
+  id                String      @id @default(cuid())
+  productId         String
+  product           Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name              String // "M / Olive"
+  sku               String      @unique
+  priceCents        Int?
+  inventory         Int? // null = unlimited (print-on-demand)
+  printfulVariantId String?
+  cartItems         CartItem[]
+  orderItems        OrderItem[]
+}
+
+model ShippingRate {
+  id           String  @id @default(cuid())
+  name         String
+  priceCents   Int
+  minDays      Int
+  maxDays      Int
+  freeOverCents Int?
+  active       Boolean @default(true)
+  sortOrder    Int     @default(0)
+  orders       Order[]
+}
+
+model Review {
+  id         String    @id @default(cuid())
+  userId     String?
+  user       User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  authorName String
+  rating     Int
+  title      String?
+  body       String
+  templateId String?
+  template   Template? @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  productId  String?
+  product    Product?  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  approved   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+}
+
+model Coupon {
+  id             String    @id @default(cuid())
+  code           String    @unique
+  description    String?
+  percentOff     Int?
+  amountOffCents Int?
+  minSubtotalCents Int?
+  maxRedemptions Int?
+  redemptions    Int       @default(0)
+  expiresAt      DateTime?
+  active         Boolean   @default(true)
+  orders         Order[]
+  createdAt      DateTime  @default(now())
+}
+
+model GiftCard {
+  id             String   @id @default(cuid())
+  code           String   @unique
+  initialCents   Int
+  balanceCents   Int
+  purchaserEmail String
+  recipientEmail String
+  recipientName  String?
+  message        String?
+  orderId        String?
+  createdAt      DateTime @default(now())
+}
+
+// ───────────────────────────── Cart & Orders ─────────────────────────────
+
+enum ItemKind {
+  TEMPLATE
+  BUNDLE
+  PRODUCT
+  GIFT_CARD
+}
+
+model Cart {
+  id                   String     @id @default(cuid())
+  userId               String?
+  user                 User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email                String?
+  couponCode           String?
+  items                CartItem[]
+  abandonedEmailSentAt DateTime?
+  convertedAt          DateTime?
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+}
+
+model CartItem {
+  id                 String          @id @default(cuid())
+  cartId             String
+  cart               Cart            @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  kind               ItemKind
+  templateId         String?
+  template           Template?       @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  bundleId           String?
+  bundle             Bundle?         @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  variantId          String?
+  variant            ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  quantity           Int             @default(1)
+  customPriceCents   Int? // PWYW amount or gift card value
+  license            License         @default(PERSONAL)
+  giftRecipientEmail String?
+  giftRecipientName  String?
+  giftMessage        String?
+  isOrderBump        Boolean         @default(false)
+  createdAt          DateTime        @default(now())
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  CANCELLED
+  REFUNDED
+}
+
+enum FulfillmentStatus {
+  NOT_REQUIRED
+  UNFULFILLED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+}
+
+enum Channel {
+  TEMPLATES
+  KITS
+  MERCH
+  COMMISSIONS
+  MEMBERSHIPS
+  TIPS
+  GIFT_CARDS
+}
+
+model Order {
+  id                    String            @id @default(cuid())
+  number                Int               @unique
+  userId                String?
+  user                  User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  email                 String
+  status                OrderStatus       @default(PENDING)
+  fulfillmentStatus     FulfillmentStatus @default(NOT_REQUIRED)
+  subtotalCents         Int
+  discountCents         Int               @default(0)
+  memberDiscountCents   Int               @default(0)
+  shippingCents         Int               @default(0)
+  creditAppliedCents    Int               @default(0)
+  giftCardAppliedCents  Int               @default(0)
+  totalCents            Int
+  couponId              String?
+  coupon                Coupon?           @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  giftCardCode          String?
+  shippingRateId        String?
+  shippingRate          ShippingRate?     @relation(fields: [shippingRateId], references: [id], onDelete: SetNull)
+  shippingAddress       Json?
+  referrerId            String?
+  cartId                String?
+  stripeSessionId       String?           @unique
+  stripePaymentIntentId String?
+  printfulOrderId       String?
+  trackingNumber        String?
+  trackingUrl           String?
+  items                 OrderItem[]
+  referralConversion    ReferralConversion?
+  paidAt                DateTime?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  @@index([email])
+  @@index([status, paidAt])
+}
+
+model OrderItem {
+  id                 String          @id @default(cuid())
+  orderId            String
+  order              Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  kind               ItemKind
+  channel            Channel
+  name               String
+  templateId         String?
+  template           Template?       @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  bundleId           String?
+  bundle             Bundle?         @relation(fields: [bundleId], references: [id], onDelete: SetNull)
+  variantId          String?
+  variant            ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  quantity           Int
+  unitPriceCents     Int
+  totalCents         Int
+  license            License         @default(PERSONAL)
+  giftRecipientEmail String?
+  giftRecipientName  String?
+  giftMessage        String?
+}
+
+/// Ledger of every dollar that comes in, by channel. Drives the admin revenue charts.
+model RevenueEvent {
+  id          String   @id @default(cuid())
+  channel     Channel
+  amountCents Int
+  description String
+  orderId     String?
+  referred    Boolean  @default(false)
+  occurredAt  DateTime @default(now())
+
+  @@index([occurredAt])
+}
+
+/// Processed Stripe webhook events, for idempotency.
+model StripeEvent {
+  id        String   @id
+  type      String
+  createdAt DateTime @default(now())
+}
+
+// ───────────────────────────── Commissions & Tips ─────────────────────────────
+
+enum CommissionStatus {
+  REQUESTED
+  DEPOSIT_PAID
+  QUOTED
+  ACCEPTED
+  IN_PROGRESS
+  SHIPPED
+  COMPLETED
+  DECLINED
+}
+
+model Commission {
+  id              String           @id @default(cuid())
+  userId          String?
+  user            User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  name            String
+  email           String
+  subjectType     String // car, truck, motorcycle, house, other
+  description     String
+  catCount        Int              @default(1)
+  photoKeys       Json // string[]
+  status          CommissionStatus @default(REQUESTED)
+  depositCents    Int
+  quoteCents      Int?
+  adminNotes      String?
+  stripeSessionId String?          @unique
+  depositPaidAt   DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model Tip {
+  id              String    @id @default(cuid())
+  name            String?
+  email           String?
+  amountCents     Int
+  message         String?
+  showOnWall      Boolean   @default(false)
+  paid            Boolean   @default(false)
+  stripeSessionId String?   @unique
+  paidAt          DateTime?
+  createdAt       DateTime  @default(now())
+}
+
+// ───────────────────────────── Membership ─────────────────────────────
+
+enum MembershipTier {
+  RECRUIT
+  OFFICER
+  COMMANDER
+}
+
+enum BillingInterval {
+  MONTH
+  YEAR
+}
+
+enum MembershipStatus {
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELED
+}
+
+model Membership {
+  id                   String           @id @default(cuid())
+  userId               String           @unique
+  user                 User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tier                 MembershipTier
+  interval             BillingInterval
+  status               MembershipStatus
+  stripeSubscriptionId String?          @unique
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean          @default(false)
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+}
+
+enum PollStatus {
+  DRAFT
+  OPEN
+  CLOSED
+}
+
+model Poll {
+  id          String       @id @default(cuid())
+  title       String
+  description String?
+  status      PollStatus   @default(OPEN)
+  closesAt    DateTime?
+  options     PollOption[]
+  votes       PollVote[]
+  createdAt   DateTime     @default(now())
+}
+
+model PollOption {
+  id          String     @id @default(cuid())
+  pollId      String
+  poll        Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  label       String
+  description String?
+  imageKey    String?
+  votes       PollVote[]
+}
+
+model PollVote {
+  id        String     @id @default(cuid())
+  pollId    String
+  poll      Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  optionId  String
+  option    PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weight    Int        @default(1) // higher tiers can get more votes
+  createdAt DateTime   @default(now())
+
+  @@unique([pollId, userId])
+}
+
+// ───────────────────────────── Community ─────────────────────────────
+
+enum ModerationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model GalleryPost {
+  id             String           @id @default(cuid())
+  userId         String
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  templateId     String?
+  template       Template?        @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  catName        String
+  caption        String?
+  imageKey       String
+  width          Int
+  height         Int
+  status         ModerationStatus @default(PENDING)
+  rejectReason   String?
+  likesCount     Int              @default(0)
+  featuredAt     DateTime? // Recruit of the Week
+  moderatedAt    DateTime?
+  likes          Like[]
+  createdAt      DateTime         @default(now())
+
+  @@index([status, createdAt])
+}
+
+model Like {
+  postId    String
+  userId    String
+  post      GalleryPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+
+  @@id([postId, userId])
+}
+
+// ───────────────────────────── Content ─────────────────────────────
+
+model Video {
+  id           String    @id @default(cuid())
+  url          String    @unique
+  tiktokId     String?
+  title        String
+  series       String
+  thumbnailUrl String?
+  authorName   String?
+  templateId   String?
+  template     Template? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  cats         Cat[]
+  featured     Boolean   @default(false)
+  sortOrder    Int       @default(0)
+  publishedAt  DateTime  @default(now())
+  createdAt    DateTime  @default(now())
+}
+
+enum GuideCategory {
+  BUILD
+  SOURCING
+  ADHESIVES
+  TECHNIQUE
+}
+
+model Guide {
+  id            String        @id @default(cuid())
+  slug          String        @unique
+  title         String
+  summary       String
+  category      GuideCategory
+  coverImageKey String
+  premium       Boolean       @default(false)
+  templateId    String?
+  template      Template?     @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  intro         String
+  steps         GuideStep[]
+  published     Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model GuideStep {
+  id       String  @id @default(cuid())
+  guideId  String
+  guide    Guide   @relation(fields: [guideId], references: [id], onDelete: Cascade)
+  order    Int
+  title    String
+  body     String
+  imageKey String?
+  videoUrl String?
+}
+
+model AffiliateLink {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  url         String
+  category    String
+  priceHint   String?
+  imageKey    String?
+  badge       String? // "Her pick", "Budget"
+  clicks      Int      @default(0)
+  sortOrder   Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+// ───────────────────────────── Email marketing ─────────────────────────────
+
+enum SubscriberStatus {
+  SUBSCRIBED
+  UNSUBSCRIBED
+}
+
+model Subscriber {
+  id               String           @id @default(cuid())
+  email            String           @unique
+  name             String?
+  status           SubscriberStatus @default(SUBSCRIBED)
+  source           String // lead_magnet, footer, drop_notify, checkout
+  unsubscribeToken String           @unique @default(cuid())
+  welcomeStep      Int              @default(0)
+  welcomeNextAt    DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+}
+
+enum Segment {
+  ALL
+  FREE
+  BUYERS
+  MEMBERS
+}
+
+enum BroadcastStatus {
+  DRAFT
+  SENT
+}
+
+model Broadcast {
+  id             String          @id @default(cuid())
+  subject        String
+  previewText    String?
+  body           String // markdown-ish plain text
+  segment        Segment         @default(ALL)
+  status         BroadcastStatus @default(DRAFT)
+  recipientCount Int             @default(0)
+  sentAt         DateTime?
+  createdAt      DateTime        @default(now())
+}
+
+model EmailLog {
+  id        String   @id @default(cuid())
+  to        String
+  subject   String
+  template  String
+  provider  String // resend | console
+  status    String // sent | failed | logged
+  error     String?
+  html      String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+// ───────────────────────────── Inquiries ─────────────────────────────
+
+enum InquiryKind {
+  SPONSORSHIP
+  CLASSROOM
+  CONTACT
+}
+
+enum InquiryStatus {
+  NEW
+  IN_PROGRESS
+  WON
+  CLOSED
+}
+
+model Inquiry {
+  id        String        @id @default(cuid())
+  kind      InquiryKind
+  name      String
+  email     String
+  company   String?
+  budget    String?
+  message   String
+  data      Json?
+  status    InquiryStatus @default(NEW)
+  createdAt DateTime      @default(now())
+}
+
+// ───────────────────────────── Referrals ─────────────────────────────
+
+enum ReferralStatus {
+  PENDING
+  APPROVED
+  PAID
+  VOID
+}
+
+model ReferralClick {
+  id         String   @id @default(cuid())
+  referrerId String
+  referrer   User     @relation(fields: [referrerId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+}
+
+model ReferralConversion {
+  id              String         @id @default(cuid())
+  referrerId      String
+  referrer        User           @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  orderId         String         @unique
+  order           Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  referredEmail   String
+  orderTotalCents Int
+  rewardCents     Int
+  status          ReferralStatus @default(APPROVED)
+  createdAt       DateTime       @default(now())
+}
