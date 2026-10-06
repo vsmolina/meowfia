@@ -290,6 +290,12 @@ async function main() {
       }),
     );
   }
+  // Well-known demo accounts (documented in the README)
+  await db.user.update({ where: { id: users[2].id }, data: { email: "commander@example.com", name: "Jordan T." } });
+  await db.user.update({ where: { id: users[13].id }, data: { email: "recruit@example.com", name: "Rowan P." } });
+  users[2] = await db.user.findUniqueOrThrow({ where: { id: users[2].id } });
+  users[13] = await db.user.findUniqueOrThrow({ where: { id: users[13].id } });
+
   // A couple of referred users
   await db.user.update({ where: { id: users[11].id }, data: { referredById: users[0].id } });
   await db.user.update({ where: { id: users[12].id }, data: { referredById: users[0].id } });
@@ -674,7 +680,8 @@ async function main() {
   }
 
   console.log(`✅ Seeded: ${templates.length} templates, ${bundles.length} bundles, ${Object.keys(P).length} products, ${cats.length} cats, ${posts.length} gallery posts, ${orderNo - 1001} orders.`);
-  console.log(`👑 Admin user: ${admin.email} (sign in with this email; the magic link is printed to the console)`);
+  console.log(`👑 Admin: ${admin.email} · 🎖️ Commander member: commander@example.com · 🪖 Customer: recruit@example.com`);
+  console.log("   Sign in at /sign-in with any of these; the magic link is printed in the dev server console.");
 }
 
 main()

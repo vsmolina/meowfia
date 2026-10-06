@@ -29,7 +29,9 @@ export async function sendEmail({ to, subject, react, template, replyTo, headers
   const [html, text] = await Promise.all([render(react), render(react, { plainText: true })]);
 
   if (!features.resend) {
-    const links = [...html.matchAll(/href="([^"]+)"/g)].map((m) => m[1]).filter((l) => !l.startsWith("mailto:"));
+    const links = [...html.matchAll(/href="([^"]+)"/g)]
+      .map((m) => m[1].replace(/&amp;/g, "&"))
+      .filter((l) => !l.startsWith("mailto:"));
     console.log(
       [
         "",
