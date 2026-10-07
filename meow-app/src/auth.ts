@@ -27,10 +27,24 @@ declare module "next-auth" {
  *  - Google: enabled only when AUTH_GOOGLE_ID/SECRET are set
  *  - Anyone in ADMIN_EMAILS is promoted to ADMIN on sign-in (or use `npm run make-admin`)
  */
+// The generated Prisma 7 client is structurally compatible with the adapter's expected client
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const baseAdapter = PrismaAdapter(db as any);
+const adapter: typeof baseAdapter = {
+  ...baseAdapter,
+  // A stale cookie can point at a session row that's already gone (expired, signed out
+  // elsewhere, DB reset). The stock adapter throws P2025 there, which breaks sign-in.
+  async deleteSession(sessionToken) {
+    try {
+      await baseAdapter.deleteSession!(sessionToken);
+    } catch (e) {
+      if ((e as { code?: string }).code !== "P2025") throw e;
+    }
+  },
+};
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  // The generated Prisma 7 client is structurally compatible with the adapter's expected client
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  adapter: PrismaAdapter(db as any),
+  adapter,
   secret: env.AUTH_SECRET ?? (env.NODE_ENV !== "production" ? "dev-only-insecure-auth-secret-change-me" : undefined),
   trustHost: true,
   session: { strategy: "database", maxAge: 60 * 60 * 24 * 30 },

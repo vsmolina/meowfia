@@ -21,6 +21,8 @@ const nextConfig: NextConfig = {
     // in the browser first; 4mb stays under Vercel's 4.5MB request limit.
     serverActions: { bodySizeLimit: "4mb" },
   },
+  // OG images read this font from disk at runtime; make sure it ships with the functions
+  outputFileTracingIncludes: { "/**": ["./src/assets/fonts/**"] },
   serverExternalPackages: ["better-sqlite3", "@prisma/adapter-better-sqlite3", "sharp"],
   images: {
     remotePatterns,
