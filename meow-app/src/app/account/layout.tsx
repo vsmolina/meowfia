@@ -13,7 +13,7 @@ export default async function AccountLayout({ children }: LayoutProps<"/account"
         <FileTag>Personnel file · {user.email}</FileTag>
       </div>
       <div className="grid gap-8 lg:grid-cols-[200px_1fr]">
-        <aside className="lg:sticky lg:top-24 lg:self-start">
+        <aside className="min-w-0 lg:sticky lg:top-24 lg:self-start">
           <AccountNav />
         </aside>
         <div className="min-w-0">{children}</div>

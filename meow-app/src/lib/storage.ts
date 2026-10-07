@@ -13,6 +13,8 @@ import { env, features } from "@/lib/env";
  * `s3` (AWS S3 or Cloudflare R2, any S3-compatible endpoint).
  */
 export interface StorageDriver {
+  /** URL the browser can PUT a file to directly (bypasses serverless body limits) */
+  presignPut(key: string, contentType: string): Promise<{ url: string; headers: Record<string, string> }>;
   put(key: string, body: Buffer, contentType: string): Promise<void>;
   get(key: string): Promise<{ body: Buffer; contentType: string } | null>;
   /** Stream for large files (PDF downloads) */
@@ -46,6 +48,11 @@ export function assertSafeKey(key: string) {
 export const LOCAL_STORAGE_ROOT = path.resolve(/*turbopackIgnore: true*/ process.cwd(), env.LOCAL_STORAGE_DIR ?? "storage");
 
 class LocalDriver implements StorageDriver {
+  async presignPut(key: string, contentType: string) {
+    assertSafeKey(key);
+    const { localUploadUrl } = await import("@/lib/upload-sign");
+    return { url: localUploadUrl(key, contentType), headers: { "Content-Type": contentType } };
+  }
   private resolve(key: string) {
     assertSafeKey(key);
     const full = path.resolve(/*turbopackIgnore: true*/ LOCAL_STORAGE_ROOT, key);
@@ -99,6 +106,14 @@ class S3Driver implements StorageDriver {
     });
   })();
   private bucket = env.S3_BUCKET!;
+
+  async presignPut(key: string, contentType: string) {
+    assertSafeKey(key);
+    const [{ PutObjectCommand }, { getSignedUrl }] = await Promise.all([import("@aws-sdk/client-s3"), import("@aws-sdk/s3-request-presigner")]);
+    const client = await this.clientPromise;
+    const url = await getSignedUrl(client, new PutObjectCommand({ Bucket: this.bucket, Key: key, ContentType: contentType }), { expiresIn: 600 });
+    return { url, headers: { "Content-Type": contentType } };
+  }
 
   async put(key: string, body: Buffer, contentType: string) {
     assertSafeKey(key);

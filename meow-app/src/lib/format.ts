@@ -47,3 +47,8 @@ export function slugify(s: string) {
 export function isWithin(date: Date, ms: number) {
   return Date.now() - date.getTime() < ms;
 }
+
+/** Current time in ms (wrapped so request-time reads are explicit in server components) */
+export function nowMs() {
+  return Date.now();
+}
