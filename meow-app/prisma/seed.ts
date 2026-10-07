@@ -202,6 +202,9 @@ async function main() {
           membersOnly: Boolean(t.membersOnly),
           earlyAccessHours: t.earlyAccessHours ?? 0,
           releaseAt: t.releaseInDays ? new Date(Date.now() + t.releaseInDays * 86_400_000) : daysAgo(200 - i * 15),
+          // Already-released templates count as announced so the drops cron doesn't email about them
+          dropAnnouncedAt: t.releaseInDays ? null : daysAgo(200 - i * 15),
+          earlyAccessNotifiedAt: t.releaseInDays ? null : daysAgo(200 - i * 15),
           createdAt: daysAgo(200 - i * 15),
         },
       }),

@@ -173,6 +173,8 @@ model Template {
   membersOnly            Boolean       @default(false)
   earlyAccessHours       Int           @default(0) // members see it this many hours before releaseAt
   releaseAt              DateTime? // future = scheduled drop
+  dropAnnouncedAt        DateTime? // set by the drops cron after announcing a release
+  earlyAccessNotifiedAt  DateTime? // set when members are told early access is open
   status                 PublishStatus @default(PUBLISHED)
   createdAt              DateTime      @default(now())
   updatedAt              DateTime      @updatedAt
