@@ -16,6 +16,11 @@ if (process.env.NEXT_PUBLIC_MEDIA_BASE_URL) {
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  experimental: {
+    // Photo uploads (gallery, commissions) go through Server Actions. Images are downscaled
+    // in the browser first; 4mb stays under Vercel's 4.5MB request limit.
+    serverActions: { bodySizeLimit: "4mb" },
+  },
   serverExternalPackages: ["better-sqlite3", "@prisma/adapter-better-sqlite3", "sharp"],
   images: {
     remotePatterns,
