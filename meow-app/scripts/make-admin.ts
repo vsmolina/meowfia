@@ -5,10 +5,10 @@
  * If the user doesn't exist yet, they're created and can sign in with that email.
  */
 import "dotenv/config";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { createDbAdapter } from "../src/lib/db-adapter";
 import { PrismaClient } from "../src/generated/prisma/client";
 
-const db = new PrismaClient({ adapter: new PrismaBetterSqlite3({ url: process.env.DATABASE_URL ?? "file:./dev.db" }) });
+const db = new PrismaClient({ adapter: createDbAdapter() });
 
 async function main() {
   const email = process.argv[2]?.trim().toLowerCase();

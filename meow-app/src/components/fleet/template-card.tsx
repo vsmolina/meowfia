@@ -17,7 +17,7 @@ export function priceLabel(t: Pick<TemplateCardData, "pricingMode" | "priceCents
 
 export function DifficultyPips({ level, className }: { level: 1 | 2 | 3 | 4; className?: string }) {
   return (
-    <span className={cn("inline-flex gap-0.5", className)} aria-label={`Difficulty ${level} of 4`}>
+    <span className={cn("inline-flex gap-0.5", className)} role="img" aria-label={`Difficulty ${level} of 4`}>
       {[1, 2, 3, 4].map((i) => (
         <span key={i} className={cn("h-2.5 w-1.5 -skew-x-12 rounded-[1px]", i <= level ? "bg-olive" : "bg-ink/15")} />
       ))}

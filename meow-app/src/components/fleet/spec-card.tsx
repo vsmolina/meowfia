@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 function CatSizeMeter({ size }: { size: Template["catSize"] }) {
   const sizes = ["KITTEN", "STANDARD", "CHONK"] as const;
   return (
-    <span className="flex items-end gap-1.5" aria-label={`Cat size: ${CAT_SIZE_LABELS[size]}`}>
+    <span className="flex items-end gap-1.5" role="img" aria-label={`Cat size: ${CAT_SIZE_LABELS[size]}`}>
       {sizes.map((s, i) => (
         <svg key={s} viewBox="0 0 24 24" className={cn(["size-4", "size-5", "size-7"][i], s === size ? "text-olive" : "text-ink/15")} fill="currentColor" aria-hidden="true">
           <path d="M4 10 L6 3 L10 7.5 H14 L18 3 L20 10 Q21 20 12 21 Q3 20 4 10 Z" />

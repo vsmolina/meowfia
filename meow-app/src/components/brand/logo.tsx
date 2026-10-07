@@ -36,7 +36,7 @@ export function Logo({ className, compact = false }: { className?: string; compa
     <Link
       href="/"
       className={cn("group inline-flex items-center gap-2 text-olive-dark", className)}
-      aria-label={`${siteConfig.name} home`}
+      aria-label={compact ? `${siteConfig.name} home` : undefined}
     >
       <LogoMark className="h-8 transition-transform duration-300 group-hover:-translate-x-0.5 group-hover:rotate-[-4deg]" />
       {!compact && (

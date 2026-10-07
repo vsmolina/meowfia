@@ -45,8 +45,8 @@ export function TikTokEmbed({
           type="button"
           onClick={() => (videoId ? setLoaded(true) : window.open(url, "_blank", "noopener"))}
           className="group absolute inset-0 flex flex-col items-center justify-center text-paper"
-          aria-label={`Play video: ${label}`}
         >
+          <span className="sr-only">Play video: </span>
           {thumbnailUrl ? (
             <Image
               src={thumbnailUrl}
@@ -64,7 +64,7 @@ export function TikTokEmbed({
             <Play className="ml-1 size-7 fill-current" />
           </span>
           <span className="absolute inset-x-0 bottom-0 line-clamp-2 p-4 text-left text-sm font-medium">{label}</span>
-          <span className="absolute left-3 top-3 rounded bg-ink/70 px-2 py-0.5 font-mono text-[0.65rem] tracking-widest">TIKTOK</span>
+          <span className="absolute left-3 top-3 rounded bg-ink/70 px-2 py-0.5 font-mono text-[0.65rem] tracking-widest" aria-hidden="true">TIKTOK</span>
         </button>
       )}
     </div>

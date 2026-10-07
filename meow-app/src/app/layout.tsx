@@ -9,11 +9,13 @@ import { Analytics } from "@/components/layout/analytics";
 import { MotionProvider } from "@/components/motion";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { JsonLd } from "@/components/seo/json-ld";
 import "./globals.css";
 
 const stencil = Black_Ops_One({ weight: "400", subsets: ["latin"], variable: "--font-stencil", display: "swap" });
-const barlow = Barlow({ weight: ["400", "500", "600", "700"], subsets: ["latin"], variable: "--font-barlow", display: "swap" });
-const plexMono = IBM_Plex_Mono({ weight: ["400", "500"], subsets: ["latin"], variable: "--font-plex-mono", display: "swap" });
+const barlow = Barlow({ weight: ["400", "600", "700"], subsets: ["latin"], variable: "--font-barlow", display: "swap" });
+// Mono is only used for small labels, so don't let it compete with the headline font for bandwidth
+const plexMono = IBM_Plex_Mono({ weight: ["400"], subsets: ["latin"], variable: "--font-plex-mono", display: "swap", preload: false });
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
@@ -30,7 +32,6 @@ export const metadata: Metadata = {
     description: siteConfig.description,
   },
   twitter: { card: "summary_large_image" },
-  alternates: { canonical: "/" },
 };
 
 export const viewport: Viewport = {
@@ -62,6 +63,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </TooltipProvider>
         </MotionProvider>
         <Analytics />
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: siteConfig.name,
+            url: siteUrl(),
+            logo: siteUrl("/icon.svg"),
+            description: siteConfig.description,
+            founder: { "@type": "Person", name: siteConfig.creator.name },
+            sameAs: [siteConfig.social.tiktok, siteConfig.social.instagram, siteConfig.social.youtube].filter(Boolean),
+          }}
+        />
       </body>
     </html>
   );

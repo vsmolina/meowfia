@@ -5,6 +5,7 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["src/**/*.test.ts"],
+    fileParallelism: false, // integration tests each run `prisma db push`
   },
   resolve: {
     alias: {

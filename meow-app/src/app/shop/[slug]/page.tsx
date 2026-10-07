@@ -125,7 +125,7 @@ export default async function ProductPage({ params }: PageProps<"/shop/[slug]">)
                 {i > 0 && <Plus className="size-5 text-muted-foreground" aria-hidden="true" />}
                 <Link href={`/shop/${x.slug}`} className="block w-28 text-center">
                   <div className="relative mx-auto aspect-square w-28 overflow-hidden rounded-lg border-2 border-ink">
-                    <Image src={publicUrl((x.imageKeys as string[])[0])} alt={x.name} fill sizes="112px" className="object-cover" />
+                    <Image src={publicUrl((x.imageKeys as string[])[0])} alt="" fill sizes="112px" className="object-cover" />
                   </div>
                   <p className="mt-1 line-clamp-2 text-xs font-semibold">{x.name}</p>
                 </Link>

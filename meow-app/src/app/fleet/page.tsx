@@ -59,6 +59,7 @@ export default async function FleetPage({ searchParams }: PageProps<"/fleet">) {
           </div>
         </aside>
         <div>
+          <h2 className="sr-only">Templates</h2>
           <Suspense>
             <FleetToolbar count={templates.length} />
           </Suspense>

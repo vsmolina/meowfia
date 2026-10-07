@@ -29,7 +29,7 @@ export function ProductCard({ product: p, className }: { product: ProductCardDat
   return (
     <Link href={`/shop/${p.slug}`} className={cn("group block overflow-hidden rounded-xl border-2 border-ink bg-paper shadow-stamp transition hover:-translate-y-1", className)}>
       <div className="relative aspect-square border-b-2 border-ink bg-sand">
-        <Image src={publicUrl((p.imageKeys as string[])[0])} alt={p.name} fill sizes="(max-width: 640px) 50vw, 25vw" className="object-cover transition duration-500 group-hover:scale-105" />
+        <Image src={publicUrl((p.imageKeys as string[])[0])} alt="" fill sizes="(max-width: 640px) 50vw, 25vw" className="object-cover transition duration-500 group-hover:scale-105" />
         <span className="absolute left-2 top-2 rounded bg-ink/85 px-2 py-0.5 font-mono text-[0.6rem] uppercase tracking-widest text-paper">{p.type === "KIT" ? "Pre-cut kit" : p.category}</span>
         {stock === "out" && <span className="absolute inset-x-0 bottom-0 bg-stamp py-1 text-center font-stencil text-sm text-paper">Sold out</span>}
         {stock === "low" && <span className="absolute inset-x-0 bottom-0 bg-[#e7d27c] py-1 text-center text-xs font-bold text-ink">Low stock</span>}

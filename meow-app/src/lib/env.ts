@@ -35,7 +35,6 @@ const schema = z.object({
   S3_BUCKET: optional,
   S3_ACCESS_KEY_ID: optional,
   S3_SECRET_ACCESS_KEY: optional,
-  S3_PUBLIC_URL: optional,
 
   PRINTFUL_API_KEY: optional,
   PRINTFUL_STORE_ID: optional,

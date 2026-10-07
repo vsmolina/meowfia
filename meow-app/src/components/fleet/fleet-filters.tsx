@@ -165,6 +165,7 @@ export function FleetToolbar({ count }: { count: number }) {
       <label className="ml-auto flex items-center gap-2 text-sm">
         <span className="hidden sm:inline">Sort</span>
         <select
+          aria-label="Sort by"
           value={sort}
           onChange={(e) => update((p) => (e.target.value === "featured" ? p.delete("sort") : p.set("sort", e.target.value)))}
           className="h-10 rounded-md border-2 border-ink bg-paper px-2 font-semibold"

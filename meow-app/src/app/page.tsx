@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Gift, Heart, Plane, Ship, Shield, Sparkles } from "lucide-react";
@@ -16,6 +17,8 @@ import { GalleryTile } from "@/components/recruits/gallery-tile";
 import { NewsletterForm } from "@/components/site/newsletter-form";
 import { Reveal } from "@/components/motion";
 import { Button } from "@/components/ui/button";
+
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 export default async function HomePage({ searchParams }: PageProps<"/">) {
   const sp = await searchParams;
@@ -243,7 +246,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
                 <li key={k.id}>
                   <Link href={`/shop/${k.slug}`} className="group block">
                     <div className="relative aspect-square overflow-hidden rounded-lg border-2 border-ink bg-sand">
-                      <Image src={publicUrl((k.imageKeys as string[])[0])} alt={k.name} fill sizes="(max-width: 640px) 33vw, 180px" className="object-cover transition group-hover:scale-105" />
+                      <Image src={publicUrl((k.imageKeys as string[])[0])} alt="" fill sizes="(max-width: 640px) 33vw, 180px" className="object-cover transition group-hover:scale-105" />
                     </div>
                     <p className="mt-1.5 line-clamp-1 text-sm font-semibold">{k.name}</p>
                     <p className="text-sm text-muted-foreground">{formatMoney(k.priceCents)}</p>

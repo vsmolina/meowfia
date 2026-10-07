@@ -61,7 +61,7 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-paper/20">
-        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs text-paper/70 sm:flex-row sm:justify-between sm:px-6">
+        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs text-paper/80 sm:flex-row sm:justify-between sm:px-6">
           <p>
             © {year} {siteConfig.name}. All cats are volunteers.
           </p>

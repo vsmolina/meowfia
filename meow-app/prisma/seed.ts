@@ -4,12 +4,12 @@
  * Safe to re-run: it clears seeded tables first.
  */
 import "dotenv/config";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { createDbAdapter } from "../src/lib/db-adapter";
 import { PrismaClient, type Channel, type Prisma } from "../src/generated/prisma/client";
 import { siteConfig } from "../src/config/site";
 import * as A from "./seed-assets";
 
-const db = new PrismaClient({ adapter: new PrismaBetterSqlite3({ url: process.env.DATABASE_URL ?? "file:./dev.db" }) });
+const db = new PrismaClient({ adapter: createDbAdapter() });
 
 // Deterministic randomness so every seed looks the same
 let s = 42;
