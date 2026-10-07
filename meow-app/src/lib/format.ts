@@ -42,3 +42,8 @@ export function slugify(s: string) {
     .replace(/^-+|-+$/g, "")
     .slice(0, 80);
 }
+
+/** True if `date` is within `ms` of now */
+export function isWithin(date: Date, ms: number) {
+  return Date.now() - date.getTime() < ms;
+}

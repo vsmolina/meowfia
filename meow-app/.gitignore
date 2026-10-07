@@ -50,3 +50,4 @@ next-env.d.ts
 /src/generated/
 /storage/
 /public/placeholder.png
+/public/_mobile.html

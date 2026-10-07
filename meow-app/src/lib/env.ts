@@ -41,6 +41,7 @@ const schema = z.object({
   PRINTFUL_STORE_ID: optional,
 
   DOWNLOAD_SIGNING_SECRET: optional,
+  ALLOW_MOCK_PAYMENTS: optional,
   CRON_SECRET: optional,
 
   UPSTASH_REDIS_REST_URL: optional,
@@ -83,6 +84,12 @@ export function signingSecret(): string {
   if (isProd) throw new Error("DOWNLOAD_SIGNING_SECRET (or AUTH_SECRET) must be set in production");
   return "dev-only-insecure-signing-secret";
 }
+
+/**
+ * The local mock checkout completes orders without payment. It's only ever enabled when
+ * Stripe is NOT configured, and never in production unless explicitly opted in (e.g. a staging demo).
+ */
+export const mockPaymentsEnabled = !features.stripe && (!isProd || env.ALLOW_MOCK_PAYMENTS === "true");
 
 export const adminEmails = (env.ADMIN_EMAILS ?? "")
   .split(",")

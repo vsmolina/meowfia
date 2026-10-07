@@ -25,12 +25,12 @@ export function Stamp({ children = "Classified", className, color = "red", rotat
   return (
     <span
       className={cn(
-        "inline-block select-none rounded-sm font-stencil uppercase leading-none tracking-[0.15em] opacity-90 mix-blend-multiply",
+        "inline-block select-none rounded-sm font-stencil uppercase leading-none tracking-[0.15em] opacity-90",
         COLORS[color],
         SIZES[size],
         className,
       )}
-      style={{ transform: `rotate(${rotate}deg)`, maskImage: "var(--paper-grain)" }}
+      style={{ transform: `rotate(${rotate}deg)` }}
     >
       {children}
     </span>

@@ -383,6 +383,8 @@ model Cart {
   user                 User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
   email                String?
   couponCode           String?
+  giftCardCode         String?
+  shippingRateId       String?
   items                CartItem[]
   abandonedEmailSentAt DateTime?
   convertedAt          DateTime?

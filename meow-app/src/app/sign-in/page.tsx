@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth-helpers";
 import { features } from "@/lib/env";
@@ -61,7 +62,7 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
           <EmailSignInForm callbackUrl={callbackUrl} />
         </div>
         <p className="mt-6 text-xs text-muted-foreground">
-          By continuing you agree to our <a className="underline" href="/legal/terms">Terms</a> and <a className="underline" href="/legal/privacy">Privacy Policy</a>.
+          By continuing you agree to our <Link className="underline" href="/legal/terms">Terms</Link> and <Link className="underline" href="/legal/privacy">Privacy Policy</Link>.
         </p>
       </div>
     </div>
